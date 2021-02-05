@@ -2,72 +2,79 @@ const express = require('express');
 const route=express.Router();
 const mysqlConn= require('../config/conn');
 const nodemailer = require('nodemailer');
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
 
 //Register student
-route.post('/register', function (req, res) {
-
-    let post = ({fname:req.body.fname, lname:req.body.lname, gender:req.body.gender, contactno:req.body.contactno, password:req.body.password});
-    
-        if (!post){
-            res.send({ msg: 'Please enter all fields' });
-            res.end();
-        }
-      
-        var user = post;
-    
-        bcrypt.hash(user.password, 10, function(err, hash){
-                if(err) console.log(err);
-                user.password = hash;
-                //alert(user.password); //shows hashed password
-
-                mysqlConn.query("INSERT INTO students SET ? ",[user], function (error, results, fields) {
-                    if (error) throw error;
-                    return res.send({status:200, data: results, message: 'Student registered successfully.' });
-                    });
-                })
+route.post('/register', (req, res) => {
   
-        var transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-              user: 'nyambeni@icep.co.za',
-              pass: '1993#04a19B'
-            }
-          });
-          
-          var mailOptions = {
-            from: 'nyambeni@icep.co.za',
-            to: post.email,
-            subject: 'Tutoring System',
-            text: 'You are successfuly registered to use Tutor'
-          };
-          
-          transporter.sendMail(mailOptions, function(error, info){
-            if (error) {
-              console.log(error);
-            } else {
-              console.log('Email sent: ' + info.response);
-            
-            }
-          });
-});
+  let [{fname, lname, gender, email, contactno, password, subjcode}] = req.body
+  let userType = 2
 
-//update student 
-  route.post('/student/update', function (req, res) {
-    let name=req.body.name;
-    let email=req.body.email;
-    let surname=req.body.surname;
-    let studentNumber=req.body.studentNumber;
-        
-     if (!name ||!email ) {
-       return res.status(400).send({ message: 'Please provide infor' });
+  mysqlConn.query('SELECT email FROM students WHERE email = ?', [email], async(err, results) => {
+     if(err){
+      throw err
      }
-     
-     
-        mysqlConn.query('UPDATE students SET email=?, surname=?,  name=? WHERE studentNumber=?',[email,surname,name,studentNumber],function (error, results, fields) {
-            if (error) throw error;
-            return res.send({ data: results, message: 'client  updated successfuly.' });
-        });
-    });
+     if(results.length > 0)
+     {
+      return res.send({message: 'Email already exist'});
+     } 
+
+     switch (subjcode) {
+     case 'TECHNICAL PROGRAMING':
+      subjcode = "TPG111T";
+     break;
+     case 'MATHEMATICS':
+      subjcode = "MT201";
+      break;
+     case 'ACCOUNTING':
+      subjcode = "ACC10AT";
+    break;
+    case 'MICROSOFT BASICS':
+      subjcode = "MB100A";
+    break;
+    case 'MT201':
+      subjcode = "TPG111T";
+    break;
+  default:
+    subjcode = "GD10BT"
+}
+     if (!fname || !lname || !gender || !email || !contactno || !password){
+       res.send({ msg: 'Please enter all fields' });
+       res.end();
+    }
+
+     let hashedPassword = await bcrypt.hash(password, 10);
+     console.log(hashedPassword);
+  
+  mysqlConn.query('INSERT INTO students SET fname = ?, lname = ?, userType = ?, gender = ?, email = ?, contactno = ?, password = ?, subjcode = ?', [fname, lname, userType, gender, email, contactno, hashedPassword, subjcode], (err, results, fields) => {
+    if(err){
+      throw err
+    }else{
+      console.log(req.body);
+      res.send({msg: 'User registered'});  
+    }
+  })//
+
+  });
+
+  
+})
+
+//students apdate his details    
+route.put('/student/update', function(req, res) {
+
+    const {fname, lname, gender, email, contactno, student_id} = req.body
+
+    mysqlConn.query('UPDATE students SET fname = ?, lname = ?, gender = ?, email = ?, contactno = ? WHERE student_id = ?', [fname, lname, gender, email, contactno, student_id], (err, rows) =>{
+
+      if(!err){
+        res.send('Details updated.') 
+      }else{
+        console.log(err)
+      }
+    })
+    console.log(req.body)
+  
+})
 
 module.exports=route;

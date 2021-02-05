@@ -14,32 +14,32 @@ router.use(session({
 router.use(bodyParser.urlencoded({extended : true}));
 router.use(bodyParser.json());
 
-router.post('/Stu_login', function(request, response,error) {
-	let user = request.body.contactno;
-	let user_pass = request.body.password;
+router.post('/student/login', function(req, response,err) {
 
-    if(!user || !user_pass ){
+	let [{email, password}] = req.body
+	//let email = request.body.email;
+	//let password = request.body.password;
+
+    if(!email || !password ){
 		return response.send({ msg: 'Please enter all fields'});
 	}
-	if (user_pass.length < 6) {
+	/*if (password.length < 6) {
 		return response.send({ msg: 'Password must be at least 6 characters' });
-	}
-	if (user.length < 10) {
-		return response.send({ msg: 'Contact number must be at least 10 characters' });
-	}
-	if ( user && user_pass) {
-		mysqlConn.query('SELECT * FROM students WHERE contactno = ? AND password = ?', [user , user_pass], function(err, results, fields) {
+	}*/
+
+	if ( email && password) {
+		mysqlConn.query('SELECT * FROM students WHERE email = ? AND password = ?', [email , password], function(err, results, fields) {
 			if (results.length>0) {
-				jwt.sign({user}, 'secretkey', { expiresIn: '30s' }, (err, token) => {
+				jwt.sign({email}, 'secretkey', { expiresIn: '30s' }, (err, token) => {
 					response.json({
 						token,
-					 user:results
+						email:results
 					});
 				  });
 
 			} else {
-				response.send('Contact number or password is incorrect');
-				console.log('Contact number or password is incorrect');
+				response.send('email or password is incorrect');
+				console.log('email or password is incorrect');
 				response.end();
 			}	
 		})
@@ -47,32 +47,29 @@ router.post('/Stu_login', function(request, response,error) {
 	
 });
 
-router.post('/admin_login', function(request, response,error) {
-	let user = request.body.contactno;
-	let user_pass = request.body.password;
+router.post('/admin/login', function(req, response,err) {
 
-    if(!user || !user_pass ){
+	let [{email, password}] = req.body
+
+    if(!email || !password ){
 		return response.send({ msg: 'Please enter all fields'});
 	}
-	if (user_pass.length < 6) {
+	if (password.length < 6) {
 		return response.send({ msg: 'Password must be at least 6 characters' });
 	}
-	if (user.length < 10) {
-		return response.send({ msg: 'Contact number must be at least 10 characters' });
-	}
-	if ( user && user_pass) {
-		mysqlConn.query('SELECT * FROM admin WHERE contactno = ? AND password = ?', [user , user_pass], function(err, results, fields) {
+	if ( email && password) {
+		mysqlConn.query('SELECT * FROM admin WHERE email = ? AND password = ?', [email , password], function(err, results, fields) {
 			if (results.length>0) {
-				jwt.sign({user}, 'secretkey', { expiresIn: '30s' }, (err, token) => {
+				jwt.sign({email}, 'secretkey', { expiresIn: '30s' }, (err, token) => {
 					response.json({
 						token,
-					 user:results
+						email:results
 					});
 				  });
 
 			} else {
-				response.send('Contact number or password is incorrect');
-				console.log('Contact number or password is incorrect');
+				response.send('Email or password is incorrect');
+				console.log('Email or password is incorrect');
 				response.end();
 			}	
 		})

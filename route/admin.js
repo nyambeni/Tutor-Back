@@ -12,9 +12,9 @@ router.get('/students', function (req, res) {
     });
 });
 
-//get student by id 
+//get student by id ----------pending
 router.get('/students/:id', function (req, res) {
-    let student_id = {student_id:req.body.student_id};
+  const {student_id} = req.body
      
     mysqlConn.query('SELECT * FROM students WHERE student_id = ?', [student_id], (error, result) => {
             if (error) throw error;
@@ -28,7 +28,7 @@ router.delete('/delete/:student_id', (req, res) => {
   
     mysqlConn.query('DELETE FROM students WHERE student_id = ?', [req.params.student_id], (err, rows) =>{
         if(!err){
-          res.send('Movie has been deleted.')
+          res.send('Student removed.')
         }else{
           console.log(err)
         }
